@@ -64,6 +64,7 @@ pub struct ProcessingConfigUpdate {
 #[derive(Deserialize)]
 pub struct VideoConfigUpdate {
     pub enabled: Option<bool>,
+    pub dissolve: Option<bool>,
     pub framerate: Option<u32>,
     pub codec: Option<String>,
     pub crf: Option<u32>,
@@ -317,6 +318,9 @@ pub async fn update_config(
         if let Some(vid) = update.video {
             if let Some(v) = vid.enabled {
                 config.video.enabled = v;
+            }
+            if let Some(v) = vid.dissolve {
+                config.video.dissolve = v;
             }
             if let Some(v) = vid.framerate {
                 config.video.framerate = v;

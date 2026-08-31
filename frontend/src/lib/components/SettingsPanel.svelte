@@ -90,6 +90,7 @@
         },
         video: {
           enabled: config.video.enabled,
+          dissolve: config.video.dissolve,
           framerate: Number(config.video.framerate),
           codec: config.video.codec,
           crf: Number(config.video.crf),
@@ -572,6 +573,14 @@
             </fieldset>
           {:else if activeTab === 'video'}
             <fieldset disabled={disabled || saving}>
+              <div class="setting-row checkbox-row">
+                <label for="video-dissolve">
+                  <span class="setting-label">Dissolve Transitions</span>
+                  <span class="setting-hint">Smoothly blend each photo into the next</span>
+                </label>
+                <input id="video-dissolve" type="checkbox" bind:checked={config.video.dissolve} />
+              </div>
+
               <div class="setting-row">
                 <label for="video-framerate">
                   <span class="setting-label">Framerate</span>

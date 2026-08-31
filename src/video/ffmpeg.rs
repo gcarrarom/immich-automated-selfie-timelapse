@@ -79,6 +79,7 @@ where
     // Use a closure to ensure concat file is cleaned up on all paths
     let result = run_ffmpeg(
         &concat_path,
+        &image_files,
         output_path,
         config,
         cancel_token,
@@ -96,6 +97,7 @@ where
 /// Run the ffmpeg process and handle progress/cancellation.
 async fn run_ffmpeg<F>(
     concat_path: &Path,
+    image_files: &[std::path::PathBuf],
     output_path: &Path,
     config: &VideoConfig,
     cancel_token: Option<&CancellationToken>,
@@ -105,16 +107,66 @@ async fn run_ffmpeg<F>(
 where
     F: FnMut(u32, u32),
 {
-    // Build ffmpeg command using concat demuxer
+    let frame_duration = 1.0 / config.framerate as f64;
     let mut cmd = Command::new("ffmpeg");
-    cmd.arg("-y") // Overwrite output
-        .arg("-f")
-        .arg("concat")
-        .arg("-safe")
-        .arg("0") // Allow absolute paths
-        .arg("-i")
-        .arg(concat_path)
-        .arg("-r")
+    cmd.arg("-y");
+
+    if config.dissolve && image_files.len() > 1 {
+        // Feed each still as a two-frame stream and crossfade the streams in
+        // order. The first frame of each stream provides the hold before its
+        // transition; the final trim keeps the original video duration.
+        let mut filter = String::new();
+        for (index, _) in image_files.iter().enumerate() {
+            filter.push_str(&format!(
+                "[{}:v]trim=duration={:.6},setpts=PTS-STARTPTS[v{}];",
+                index,
+                frame_duration * 2.0,
+                index
+            ));
+        }
+        let mut current = "v0".to_string();
+        for index in 1..image_files.len() {
+            let output = format!("x{}", index);
+            filter.push_str(&format!(
+                "[{}][v{}]xfade=transition=fade:duration={:.6}:offset={:.6}[{}];",
+                current,
+                index,
+                frame_duration,
+                frame_duration * index as f64,
+                output
+            ));
+            current = output;
+        }
+        filter.push_str(&format!(
+            "[{}]trim=duration={:.6},setpts=PTS-STARTPTS[out]",
+            current,
+            frame_duration * image_count as f64
+        ));
+
+        for path in image_files {
+            cmd.arg("-loop")
+                .arg("1")
+                .arg("-framerate")
+                .arg(config.framerate.to_string())
+                .arg("-i")
+                .arg(path);
+        }
+        cmd.arg("-filter_complex")
+            .arg(filter)
+            .arg("-map")
+            .arg("[out]")
+            .arg("-frames:v")
+            .arg(image_count.to_string());
+    } else {
+        cmd.arg("-f")
+            .arg("concat")
+            .arg("-safe")
+            .arg("0")
+            .arg("-i")
+            .arg(concat_path);
+    }
+
+    cmd.arg("-r")
         .arg(config.framerate.to_string())
         .arg("-c:v")
         .arg(&config.codec)

@@ -636,6 +636,9 @@ pub struct VideoConfig {
     /// Whether to compile video after processing.
     pub enabled: bool,
 
+    /// Blend adjacent photos together for smoother frame changes.
+    pub dissolve: bool,
+
     /// Output video framerate.
     pub framerate: u32,
 
@@ -650,6 +653,7 @@ impl Default for VideoConfig {
     fn default() -> Self {
         Self {
             enabled: true,
+            dissolve: true,
             framerate: 20,
             codec: "libx264".to_string(),
             crf: 23,
@@ -814,6 +818,7 @@ mod tests {
         let config = Config::default();
         assert_eq!(config.processing.output.size, 512);
         assert_eq!(config.processing.face_resolution.min_size, 80);
+        assert!(config.video.dissolve);
         assert_eq!(config.video.framerate, 20);
     }
 

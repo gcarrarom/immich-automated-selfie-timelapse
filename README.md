@@ -23,7 +23,7 @@ Use Immich's built-in face recognition to find all photos of a person, then runs
 - **Face resolution filtering** - Skips photos where the face is too small
 - **Photo limiting** - Caps photos per day/week/month to avoid over-representing busy periods
 - **Timestamp overlay** - Optionally overlays the date on each frame
-- **Video compilation** - Automatically compiles processed photos into an MP4 timelapse using FFmpeg
+- **Video compilation** - Automatically compiles processed photos into an MP4 timelapse using FFmpeg, with optional dissolve transitions between photos
 - **Web UI** - Configure all settings and monitor progress through a built-in web interface
 
 <p align="center">
@@ -55,7 +55,7 @@ Feel free to deploy this container on a more powerfull PC for faster timelapse g
 ```yaml
 services:
   immich-selfie-timelapse:
-    image: arnaudcayrol/immich-selfie-timelapse
+    image: ghcr.io/gcarrarom/immich-automated-selfie-timelapse:0.1.123
     container_name: immich-selfie-timelapse
     user: 1000:1000
     ports:
@@ -71,6 +71,8 @@ services:
 
 ### Docker Run
 
+Every push to `master` publishes a new SemVer image to GitHub Container Registry. The patch version is generated from the GitHub Actions run number, for example `ghcr.io/gcarrarom/immich-automated-selfie-timelapse:0.1.123`. For an immutable reference, use the image digest: `ghcr.io/gcarrarom/immich-automated-selfie-timelapse@sha256:<digest>`.
+
 ```bash
 docker run -d \
   --name immich-selfie-timelapse \
@@ -79,7 +81,7 @@ docker run -d \
   -e IMMICH_BASE_URL=http://your_server:2283 \
   -v ./config:/app/config \
   -v ./output:/app/output \
-  arnaudcayrol/immich-selfie-timelapse
+  ghcr.io/gcarrarom/immich-automated-selfie-timelapse:0.1.123
 ```
 
 Then open **http://your_server:5000** to access the web interface.
