@@ -59,7 +59,8 @@ impl BrightnessStep {
         // Sum luminance using standard Y = 0.299*R + 0.587*G + 0.114*B.
         // Iterate over raw bytes directly to avoid per-pixel get_pixel overhead.
         let mut total_luminance: u64 = 0;
-        for chunk in rgb.as_raw().chunks_exact(3) {
+        let (rgb_chunks, _) = rgb.as_raw().as_chunks::<3>();
+        for chunk in rgb_chunks {
             total_luminance +=
                 (299 * chunk[0] as u64 + 587 * chunk[1] as u64 + 114 * chunk[2] as u64) / 1000;
         }
