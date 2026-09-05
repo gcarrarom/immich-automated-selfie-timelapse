@@ -110,6 +110,7 @@ where
     let frame_duration = 1.0 / config.framerate as f64;
     let dissolve_duration = config.dissolve_duration as f64;
     let stream_duration = frame_duration + dissolve_duration;
+    let transition_framerate = config.transition_framerate;
     let mut cmd = Command::new("ffmpeg");
     cmd.arg("-y");
 
@@ -149,7 +150,7 @@ where
             cmd.arg("-loop")
                 .arg("1")
                 .arg("-framerate")
-                .arg(config.framerate.to_string())
+                .arg(transition_framerate.to_string())
                 .arg("-i")
                 .arg(path);
         }
@@ -167,7 +168,11 @@ where
     }
 
     cmd.arg("-r")
-        .arg(config.framerate.to_string())
+        .arg(if config.dissolve && image_files.len() > 1 {
+            transition_framerate.to_string()
+        } else {
+            config.framerate.to_string()
+        })
         .arg("-c:v")
         .arg(&config.codec)
         .arg("-crf")

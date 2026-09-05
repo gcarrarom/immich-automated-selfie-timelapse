@@ -645,6 +645,10 @@ pub struct VideoConfig {
     /// Amount of alternating lens warp applied between photos (0.0-1.0).
     pub warp: f32,
 
+    /// Framerate used while rendering dissolve and warp transitions.
+    /// Higher values produce smoother motion without changing photo cadence.
+    pub transition_framerate: u32,
+
     /// Output video framerate.
     pub framerate: u32,
 
@@ -662,6 +666,7 @@ impl Default for VideoConfig {
             dissolve: true,
             dissolve_duration: 0.15,
             warp: 0.1,
+            transition_framerate: 60,
             framerate: 20,
             codec: "libx264".to_string(),
             crf: 23,
@@ -683,6 +688,16 @@ impl VideoConfig {
         if !self.warp.is_finite() || !(0.0..=1.0).contains(&self.warp) {
             return Err(Error::Config(
                 "Video warp must be between 0.0 and 1.0".to_string(),
+            ));
+        }
+        if self.transition_framerate == 0 {
+            return Err(Error::Config(
+                "Video transition framerate must be greater than 0".to_string(),
+            ));
+        }
+        if self.transition_framerate > 120 {
+            return Err(Error::Config(
+                "Video transition framerate must be at most 120".to_string(),
             ));
         }
         if self.framerate == 0 {
@@ -838,6 +853,7 @@ mod tests {
         assert_eq!(config.processing.face_resolution.min_size, 80);
         assert!(config.video.dissolve);
         assert_eq!(config.video.framerate, 20);
+        assert_eq!(config.video.transition_framerate, 60);
     }
 
     #[test]

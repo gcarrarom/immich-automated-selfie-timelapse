@@ -93,6 +93,7 @@
           dissolve: config.video.dissolve,
           dissolve_duration: Number(config.video.dissolve_duration),
           warp: Number(config.video.warp),
+          transition_framerate: Number(config.video.transition_framerate),
           framerate: Number(config.video.framerate),
           codec: config.video.codec,
           crf: Number(config.video.crf),
@@ -604,7 +605,7 @@
               <div class="setting-row">
                 <label for="video-warp">
                   <span class="setting-label">Warp Amount</span>
-                  <span class="setting-hint">Subtle lens warp during frame changes</span>
+                  <span class="setting-hint">Liquid lens warp during frame changes</span>
                 </label>
                 <div class="setting-control">
                   <input
@@ -616,6 +617,24 @@
                     step="0.05"
                   />
                   <span class="value">{Number(config.video.warp).toFixed(2)}</span>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <label for="video-transition-framerate">
+                  <span class="setting-label">Transition Smoothness</span>
+                  <span class="setting-hint">Frames per second used for dissolves and warp</span>
+                </label>
+                <div class="setting-control">
+                  <input
+                    id="video-transition-framerate"
+                    type="range"
+                    bind:value={config.video.transition_framerate}
+                    min="24"
+                    max="120"
+                    step="1"
+                  />
+                  <span class="value">{config.video.transition_framerate} fps</span>
                 </div>
               </div>
 

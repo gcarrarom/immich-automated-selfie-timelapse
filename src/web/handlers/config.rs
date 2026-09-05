@@ -67,6 +67,7 @@ pub struct VideoConfigUpdate {
     pub dissolve: Option<bool>,
     pub dissolve_duration: Option<f32>,
     pub warp: Option<f32>,
+    pub transition_framerate: Option<u32>,
     pub framerate: Option<u32>,
     pub codec: Option<String>,
     pub crf: Option<u32>,
@@ -242,6 +243,14 @@ fn validate_video_config(vid: &VideoConfigUpdate) -> Result<(), ValidationError>
             ));
         }
     }
+    if let Some(v) = vid.transition_framerate {
+        if v == 0 || v > 120 {
+            return Err(ValidationError::new(
+                "video.transition_framerate",
+                format!("must be between 1 and 120, got {}", v),
+            ));
+        }
+    }
     if let Some(v) = vid.crf {
         if v > 51 {
             return Err(ValidationError::new(
@@ -345,6 +354,9 @@ pub async fn update_config(
             }
             if let Some(v) = vid.warp {
                 config.video.warp = v;
+            }
+            if let Some(v) = vid.transition_framerate {
+                config.video.transition_framerate = v;
             }
             if let Some(v) = vid.framerate {
                 config.video.framerate = v;
