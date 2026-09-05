@@ -91,6 +91,8 @@
         video: {
           enabled: config.video.enabled,
           dissolve: config.video.dissolve,
+          dissolve_duration: Number(config.video.dissolve_duration),
+          warp: Number(config.video.warp),
           framerate: Number(config.video.framerate),
           codec: config.video.codec,
           crf: Number(config.video.crf),
@@ -579,6 +581,42 @@
                   <span class="setting-hint">Smoothly blend each photo into the next</span>
                 </label>
                 <input id="video-dissolve" type="checkbox" bind:checked={config.video.dissolve} />
+              </div>
+
+              <div class="setting-row">
+                <label for="video-dissolve-duration">
+                  <span class="setting-label">Dissolve Duration</span>
+                  <span class="setting-hint">How long each photo blends into the next</span>
+                </label>
+                <div class="setting-control">
+                  <input
+                    id="video-dissolve-duration"
+                    type="range"
+                    bind:value={config.video.dissolve_duration}
+                    min="0.05"
+                    max="2"
+                    step="0.05"
+                  />
+                  <span class="value">{Number(config.video.dissolve_duration).toFixed(2)} s</span>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <label for="video-warp">
+                  <span class="setting-label">Warp Amount</span>
+                  <span class="setting-hint">Subtle lens warp during frame changes</span>
+                </label>
+                <div class="setting-control">
+                  <input
+                    id="video-warp"
+                    type="range"
+                    bind:value={config.video.warp}
+                    min="0"
+                    max="1"
+                    step="0.05"
+                  />
+                  <span class="value">{Number(config.video.warp).toFixed(2)}</span>
+                </div>
               </div>
 
               <div class="setting-row">

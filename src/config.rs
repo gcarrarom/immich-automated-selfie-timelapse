@@ -639,6 +639,12 @@ pub struct VideoConfig {
     /// Blend adjacent photos together for smoother frame changes.
     pub dissolve: bool,
 
+    /// Duration of each dissolve transition in seconds.
+    pub dissolve_duration: f32,
+
+    /// Amount of alternating lens warp applied between photos (0.0-1.0).
+    pub warp: f32,
+
     /// Output video framerate.
     pub framerate: u32,
 
@@ -654,6 +660,8 @@ impl Default for VideoConfig {
         Self {
             enabled: true,
             dissolve: true,
+            dissolve_duration: 0.15,
+            warp: 0.1,
             framerate: 20,
             codec: "libx264".to_string(),
             crf: 23,
@@ -667,6 +675,16 @@ const VALID_CODECS: &[&str] = &["libx264", "libx265", "libvpx", "libvpx-vp9", "l
 impl VideoConfig {
     /// Validate the configuration values.
     pub fn validate(&self) -> Result<()> {
+        if !self.dissolve_duration.is_finite() || !(0.05..=2.0).contains(&self.dissolve_duration) {
+            return Err(Error::Config(
+                "Dissolve duration must be between 0.05 and 2.0 seconds".to_string(),
+            ));
+        }
+        if !self.warp.is_finite() || !(0.0..=1.0).contains(&self.warp) {
+            return Err(Error::Config(
+                "Video warp must be between 0.0 and 1.0".to_string(),
+            ));
+        }
         if self.framerate == 0 {
             return Err(Error::Config(
                 "Video framerate must be greater than 0".to_string(),

@@ -108,19 +108,26 @@ where
     F: FnMut(u32, u32),
 {
     let frame_duration = 1.0 / config.framerate as f64;
+    let dissolve_duration = config.dissolve_duration as f64;
+    let stream_duration = frame_duration + dissolve_duration;
     let mut cmd = Command::new("ffmpeg");
     cmd.arg("-y");
 
     if config.dissolve && image_files.len() > 1 {
-        // Feed each still as a two-frame stream and crossfade the streams in
-        // order. The first frame of each stream provides the hold before its
-        // transition; the final trim keeps the original video duration.
+        // Give each still enough time for the configured crossfade. Streams
+        // advance by one frame interval, so transitions overlap naturally.
         let mut filter = String::new();
         for (index, _) in image_files.iter().enumerate() {
+            // Alternate the sign to create a subtle warp between frames rather
+            // than applying the exact same distortion to every image.
+            let warp_sign = if index % 2 == 0 { 1.0 } else { -1.0 };
+            let warp = config.warp as f64 * warp_sign;
             filter.push_str(&format!(
-                "[{}:v]trim=duration={:.6},setpts=PTS-STARTPTS[v{}];",
+                "[{}:v]lenscorrection=k1={:.4}:k2={:.4},trim=duration={:.6},setpts=PTS-STARTPTS[v{}];",
                 index,
-                frame_duration * 2.0,
+                warp * 0.1,
+                warp * 0.02,
+                stream_duration,
                 index
             ));
         }
@@ -131,17 +138,12 @@ where
                 "[{}][v{}]xfade=transition=fade:duration={:.6}:offset={:.6}[{}];",
                 current,
                 index,
-                frame_duration,
+                dissolve_duration,
                 frame_duration * index as f64,
                 output
             ));
             current = output;
         }
-        filter.push_str(&format!(
-            "[{}]trim=duration={:.6},setpts=PTS-STARTPTS[out]",
-            current,
-            frame_duration * image_count as f64
-        ));
 
         for path in image_files {
             cmd.arg("-loop")
@@ -154,9 +156,7 @@ where
         cmd.arg("-filter_complex")
             .arg(filter)
             .arg("-map")
-            .arg("[out]")
-            .arg("-frames:v")
-            .arg(image_count.to_string());
+            .arg(format!("[{}]", current));
     } else {
         cmd.arg("-f")
             .arg("concat")

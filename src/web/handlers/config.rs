@@ -65,6 +65,8 @@ pub struct ProcessingConfigUpdate {
 pub struct VideoConfigUpdate {
     pub enabled: Option<bool>,
     pub dissolve: Option<bool>,
+    pub dissolve_duration: Option<f32>,
+    pub warp: Option<f32>,
     pub framerate: Option<u32>,
     pub codec: Option<String>,
     pub crf: Option<u32>,
@@ -216,6 +218,22 @@ fn validate_processing_config(proc: &ProcessingConfigUpdate) -> Result<(), Valid
 
 /// Validate video configuration update values.
 fn validate_video_config(vid: &VideoConfigUpdate) -> Result<(), ValidationError> {
+    if let Some(v) = vid.dissolve_duration {
+        if !v.is_finite() || !(0.05..=2.0).contains(&v) {
+            return Err(ValidationError::new(
+                "video.dissolve_duration",
+                format!("must be between 0.05 and 2.0 seconds, got {}", v),
+            ));
+        }
+    }
+    if let Some(v) = vid.warp {
+        if !v.is_finite() || !(0.0..=1.0).contains(&v) {
+            return Err(ValidationError::new(
+                "video.warp",
+                format!("must be between 0.0 and 1.0, got {}", v),
+            ));
+        }
+    }
     if let Some(v) = vid.framerate {
         if v == 0 || v > 120 {
             return Err(ValidationError::new(
@@ -321,6 +339,12 @@ pub async fn update_config(
             }
             if let Some(v) = vid.dissolve {
                 config.video.dissolve = v;
+            }
+            if let Some(v) = vid.dissolve_duration {
+                config.video.dissolve_duration = v;
+            }
+            if let Some(v) = vid.warp {
+                config.video.warp = v;
             }
             if let Some(v) = vid.framerate {
                 config.video.framerate = v;
