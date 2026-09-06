@@ -246,6 +246,11 @@
     <ConnectionStatus onchange={handleConnectionChange} />
   </header>
 
+  <!-- Settings only depend on this app's API, so load them independently of Immich. -->
+  <section class="settings">
+    <SettingsPanel disabled={isJobRunning} />
+  </section>
+
   {#if connectionOk}
     {#if currentView === 'gallery' && galleryFolder}
       <section class="gallery">
@@ -256,10 +261,6 @@
         />
       </section>
     {:else}
-      <section class="settings">
-        <SettingsPanel disabled={isJobRunning} />
-      </section>
-
       <section class="controls">
         <PeopleSelector
           onselect={handlePersonSelect}
